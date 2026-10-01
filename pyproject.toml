@@ -7,7 +7,7 @@ name = "pysemtm0009"
 version = "0.1.0"
 description = "Transparent numerical analysis and continuation utilities for SEMTM0009"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.12,<3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
@@ -19,8 +19,8 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Education",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Education",
   "Topic :: Scientific/Engineering",
 ]

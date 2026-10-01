@@ -80,7 +80,7 @@ jobs:
               metadata = BytesParser().parsebytes(archive.read(metadata_name))
               assert metadata["Name"] == "pysemtm0009"
               assert metadata["Version"] == "0.1.0"
-              assert metadata["Requires-Python"] == ">=3.11, <3.13"
+              assert metadata["Requires-Python"] == ">=3.12, <3.14"
 
           with tarfile.open(sdists[0], "r:gz") as archive:
               sdist_members = archive.getnames()

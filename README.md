@@ -39,7 +39,7 @@ between classes and makes results harder to reproduce.
 
 ## Local development and build
 
-The supported interpreters are Python 3.11 and 3.12. Create an environment,
+The supported interpreters are Python 3.12 and 3.13. Create an environment,
 install the development extra, then run the same core checks as CI:
 
 ```bash
