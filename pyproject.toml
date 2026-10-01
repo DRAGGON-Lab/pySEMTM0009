@@ -1,0 +1,61 @@
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12"]
+build-backend = "uv_build"
+
+[project]
+name = "pysemtm0009"
+version = "0.1.0"
+description = "Transparent numerical analysis and continuation utilities for SEMTM0009"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+  "numpy>=2.0,<3",
+  "scipy>=1.14,<2",
+  "matplotlib>=3.9,<4",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.11,<2", "pytest>=8.3,<9"]
+
+[project.urls]
+Source = "https://github.com/DRAGGON-Lab/pySEMTM0009"
+Issues = "https://github.com/DRAGGON-Lab/pySEMTM0009/issues"
+Documentation = "https://github.com/DRAGGON-Lab/pySEMTM0009#readme"
+
+[tool.uv.build-backend]
+module-name = "semtm0009"
+module-root = ""
+
+[tool.mypy]
+strict = true
+follow_imports = "skip"
+warn_unreachable = true
+pretty = true
+show_error_codes = true
+files = ["semtm0009", "semtm0009_continuation.py"]
+
+[[tool.mypy.overrides]]
+module = ["scipy.*"]
+ignore_missing_imports = true
+
+# NumPy 2.4's generic array-return overloads require redundant local
+# annotations in these two otherwise fully typed modules. Keep the scientific
+# source mirrored byte-for-byte while retaining every other strict check.
+[[tool.mypy.overrides]]
+module = ["semtm0009.continuation"]
+disable_error_code = ["misc", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = ["semtm0009.plotting"]
+disable_error_code = ["var-annotated"]
