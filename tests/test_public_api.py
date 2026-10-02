@@ -1,4 +1,4 @@
-"""Regression tests for the stable teaching API and compatibility shim."""
+"""Standalone smoke tests retained when ``python/`` becomes its own repository."""
 
 from __future__ import annotations
 
@@ -6,17 +6,24 @@ import sys
 from pathlib import Path
 from typing import cast
 
+import matplotlib.pyplot as plt
 import numpy as np
-import semtm0009_continuation as legacy
+import pytest
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PACKAGE_ROOT))
 
+import semtm0009_continuation as legacy
 from semtm0009 import (
     IZHIKEVICH_PRACTICAL_PARAMETERS,
     __version__,
+    configure_figure_output,
     continue_equilibrium,
     continue_periodic_orbit,
+    d_green,
+    d_orange,
+    d_purple,
+    d_red,
     reduced_neuron,
 )
 from semtm0009.continuation import ContinuationBranch
@@ -28,7 +35,11 @@ def test_public_package_api_and_legacy_shim() -> None:
     assert callable(reduced_neuron)
     assert callable(continue_equilibrium)
     assert callable(continue_periodic_orbit)
+    assert callable(configure_figure_output)
     assert isinstance(IZHIKEVICH_PRACTICAL_PARAMETERS, dict)
+    assert (d_purple, d_orange, d_green, d_red) == (
+        "#422680", "#E56B1F", "#18864B", "#C73E1D"
+    )
     assert legacy.continue_equilibrium is continue_equilibrium
     assert legacy.continue_periodic_orbit is continue_periodic_orbit
 
@@ -80,3 +91,20 @@ def test_five_point_equilibrium_branch_has_consistent_arrays() -> None:
     assert np.all(np.isfinite(branch.parameters))
     assert np.all(np.isfinite(branch.states))
     assert np.all(np.isfinite(branch.eigenvalues))
+
+
+def test_configure_figure_output_validates_mode_and_writes_files(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="mode must be one of"):
+        configure_figure_output("elsewhere", tmp_path)
+
+    render_figure = configure_figure_output("files", tmp_path)
+    figure, axis = plt.subplots()
+    axis.plot([0, 1], [0, 1])
+    figure_number = figure.number
+    render_figure(figure, "example")
+
+    assert (tmp_path / "example.pdf").stat().st_size > 1000
+    assert (tmp_path / "example.png").stat().st_size > 1000
+    assert not plt.fignum_exists(figure_number)

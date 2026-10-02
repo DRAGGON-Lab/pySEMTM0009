@@ -3,14 +3,84 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
+from io import BytesIO
+from pathlib import Path
+from typing import Literal, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from .analysis import Equilibrium, simulate
 from .continuation import ContinuationBranch
 from .types import FloatArray, ParameterSet, RHS
+
+
+FigureOutputMode = Literal["inline", "files", "both"]
+FIGURE_OUTPUT_MODES = frozenset({"inline", "files", "both"})
+
+# Named DRAGGON Lab palette for readable teaching code.
+d_purple = "#422680"
+d_orange = "#E56B1F"
+d_green = "#18864B"
+d_red = "#C73E1D"
+
+
+@dataclass(frozen=True)
+class FigureOutput:
+    """Callable renderer configured for notebook display, file export, or both."""
+
+    mode: FigureOutputMode
+    output_directory: Path
+    dpi: int = 180
+
+    def __call__(self, figure: Figure, stem: str) -> None:
+        """Render ``figure`` according to this configuration, then close it."""
+        if not stem or Path(stem).name != stem:
+            raise ValueError("stem must be a nonempty filename stem without directories")
+        if self.mode in {"files", "both"}:
+            for suffix in ("pdf", "png"):
+                figure.savefig(
+                    self.output_directory / f"{stem}.{suffix}",
+                    dpi=self.dpi,
+                    bbox_inches="tight",
+                )
+        if self.mode in {"inline", "both"}:
+            try:
+                from IPython.display import Image as NotebookImage, display
+            except ImportError as error:
+                raise RuntimeError(
+                    "inline figure output requires an IPython/Jupyter runtime"
+                ) from error
+            buffer = BytesIO()
+            figure.savefig(buffer, format="png", dpi=self.dpi, bbox_inches="tight")
+            display(NotebookImage(data=buffer.getvalue()))
+        plt.close(figure)
+
+
+def configure_figure_output(
+    mode: str = "both",
+    output_directory: str | Path | None = None,
+    *,
+    dpi: int = 180,
+) -> FigureOutput:
+    """Configure notebook/file figure rendering and return a callable renderer."""
+    if mode not in FIGURE_OUTPUT_MODES:
+        raise ValueError(
+            f"mode must be one of {sorted(FIGURE_OUTPUT_MODES)}, not {mode!r}"
+        )
+    if dpi <= 0:
+        raise ValueError("dpi must be positive")
+    directory = Path(output_directory or Path.cwd() / "figures" / "generated")
+    if mode in {"files", "both"}:
+        directory.mkdir(parents=True, exist_ok=True)
+    configured_mode = cast(FigureOutputMode, mode)
+    print(f"Figure output mode: {configured_mode}")
+    if configured_mode in {"files", "both"}:
+        print(f"Figure output directory: {directory.resolve()}")
+    return FigureOutput(configured_mode, directory, dpi)
 
 
 def state_grid(
