@@ -41,22 +41,26 @@ class FigureOutput:
         if not stem or Path(stem).name != stem:
             raise ValueError("stem must be a nonempty filename stem without directories")
         if self.mode in {"files", "both"}:
-            for suffix in ("pdf", "png"):
-                figure.savefig(
-                    self.output_directory / f"{stem}.{suffix}",
-                    dpi=self.dpi,
-                    bbox_inches="tight",
-                )
-        if self.mode in {"inline", "both"}:
+            figure.savefig(
+                self.output_directory / f"{stem}.pdf",
+                dpi=self.dpi,
+                bbox_inches="tight",
+            )
+        png_data: bytes | None = None
+        if self.mode in {"inline", "files", "both"}:
+            buffer = BytesIO()
+            figure.savefig(buffer, format="png", dpi=self.dpi, bbox_inches="tight")
+            png_data = buffer.getvalue()
+        if self.mode in {"files", "both"} and png_data is not None:
+            (self.output_directory / f"{stem}.png").write_bytes(png_data)
+        if self.mode in {"inline", "both"} and png_data is not None:
             try:
                 from IPython.display import Image as NotebookImage, display
             except ImportError as error:
                 raise RuntimeError(
                     "inline figure output requires an IPython/Jupyter runtime"
                 ) from error
-            buffer = BytesIO()
-            figure.savefig(buffer, format="png", dpi=self.dpi, bbox_inches="tight")
-            display(NotebookImage(data=buffer.getvalue()))
+            display(NotebookImage(data=png_data))
         plt.close(figure)
 
 
